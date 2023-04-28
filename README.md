@@ -1102,10 +1102,13 @@ exit
 **Note:** the debug messages will be visible either throughÿdmesgÿor using UART. In the following section, you will find instructions on how to find the messages using theÿdmesgÿprocedure.
 
 
-Testing the RAW10 resolution
+### Testing the RAW10 resolution
 1. Clean the kernel tracing:
+  ```
 sudo sh -c "echo > /sys/kernel/debug/tracing/trace"
+  ```
 2. The kernel tracing should print messages like the following:
+  ```
 teledyne@teledyne-desktop:~$ sudo cat /sys/kernel/debug/tracing/trace
 # tracer: nop
 #
@@ -1119,13 +1122,21 @@ teledyne@teledyne-desktop:~$ sudo cat /sys/kernel/debug/tracing/trace
 #           TASK-PID   CPU#  ||||    TIMESTAMP  FUNCTION
 #              | |       |   ||||       |         |
 teledyne@teledyne-desktop:~$
+  ```
 3. Open a second terminal in the Jetson Nano board. Clean theÿdmesgÿlog:
+  ```
 sudo dmesg -c
+  ```
 4. Wait for new kernel messages:
+  ```
 dmesg -wH
+  ```
 5. In the first terminal dequeue some buffers with the following command for the RAW10 resolution:
+  ```
 v4l2-ctl -d /dev/video0 --set-fmt-video=width=1920,height=1080,pixelformat='Y10 ' --set-ctrl bypass_mode=0 --set-ctrl sensor_mode=0 --stream-mmap --stream-count=10
+  ```
 6. Output messages in the second terminal related to theÿdmesgÿwill be shown similar to the following:
+  ```
 [  +0,001065] topaz2m 6-0010: camera_common_dpd_enable: csi 0
 [  +0,000007] topaz2m 6-0010: camera_common_mclk_disable: disable MCLK
 [  +0,000028] topaz2m 6-0010: camera_common_mclk_enable: enable MCLK with 50000000 Hz
@@ -1148,11 +1159,14 @@ v4l2-ctl -d /dev/video0 --set-fmt-video=width=1920,height=1080,pixelformat='Y10 
 [  +0,017038] topaz2m 6-0010: camera_common_dpd_enable: csi 0
 [  +0,005645] topaz2m 6-0010: camera_common_mclk_disable: disable MCLK
 [  +0,007083] video0: release
-
+```
 
 7. Read the kernel tracing messages in the first terminal:
+  ```
 sudo cat /sys/kernel/debug/tracing/trace
+  ```
 The output should show messages similar to the following:
+  ```
 teledyne@teledyne-desktop:~$ sudo cat /sys/kernel/debug/tracing/trace
 # tracer: nop
 #
@@ -1199,12 +1213,15 @@ teledyne@teledyne-desktop:~$ sudo cat /sys/kernel/debug/tracing/trace
         v4l2-ctl-7936  [001] ....  1127.673365: camera_common_s_power: status : 0x0
         v4l2-ctl-7936  [001] ....  1127.675472: tegra_channel_set_power: nvcsi--1 : 0x0
         v4l2-ctl-7936  [001] ....  1127.675475: csi_s_power: enable : 0x0
+```
 
-
-Testing the RAW8 resolution
+### Testing the RAW8 resolution
 1. Repeat the same steps explained in the RAW10 resolution. However, replace the dequeue buffers command with the following:
+  ```
 v4l2-ctl -d /dev/video0 --set-fmt-video=width=1920,height=1080,pixelformat=GREY --set-ctrl bypass_mode=0 --set-ctrl sensor_mode=2 --stream-mmap --stream-count=10
+  ```
 2. Some output messages in the second terminal should change. They should read like the following:
+  ```
 [  +0,010893] video0: VIDIOC_G_FMT: type=vid-cap, width=1920, height=1080, pixelformat=Y10 , field=none, bytesperline=3840, sizeimage=4147200, colorspace=8, flags=0x0, ycbcr_enc=0, quantization=0, xfer_func=0
 [  +0,019426] topaz2m 6-0010: camera_common_try_fmt: size 1920 x 1080
 [  +0,006301] topaz2m 6-0010: camera_common_try_fmt: use_sensor_mode_id 1
@@ -1213,12 +1230,13 @@ v4l2-ctl -d /dev/video0 --set-fmt-video=width=1920,height=1080,pixelformat=GREY 
 [  +0,006290] topaz2m 6-0010: camera_common_try_fmt: use_sensor_mode_id 1
 [  +0,007627] video4linux video0: tegra_channel_update_format: Resolution= 1920x1080 bytesperline=1920
 [  +0,010102] video0: VIDIOC_S_FMT: type=vid-cap, width=1920, height=1080, pixelformat=GREY, field=none, bytesperline=1920, sizeimage=2073600, colorspace=8, flags=0x0, ycbcr_enc=0, quantization=0, xfer_func=0
+  ```
 8. The output of the kernel tracing messages are very similar to RAW10.
 
-Debugging using the UART on the board
-Note:ÿthe information that can be seen through UART can be seen usingÿdmesg, except messages that show before booting. Therefore, for driver debuggingÿdmesgÿmost of the time is enough, however, to debug boot issues or seeing messages that appear before boot, UART is recommended.
+## Debugging using the UART on the board
+**Note:** the information that can be seen through UART can be seen usingÿdmesg, except messages that show before booting. Therefore, for driver debuggingÿdmesgÿmost of the time is enough, however, to debug boot issues or seeing messages that appear before boot, UART is recommended.
 
 
-Known issues
-RAW10 format capturing
+# Known issues
+## RAW10 format capturing
 Since Y10 is not supported by v4l2src, so a patch is had to be applied to GStreamer so that v4l2src has support for capturing using the Y10 format. However, even with the patch, the buffers look very dark because GStreamer takes the full 2 bytes instead of just the 10 bits, which results in a darker image due to a 10bit image being interpreted as a 16bit image.
