@@ -437,37 +437,54 @@ Flash complete (SUCCESS)
 ```
 
 ## Only copy the kernel and device tree
-Note: This method might cause problems for the board to load the custom device tree. If you happen to have an already flashed and configured Jetson Nano with Jetpack 4.6.2, you could follow these steps to get the driver running.
+**Note:** This method might cause problems for the board to load the custom device tree. If you happen to have an already flashed and configured Jetson Nano with Jetpack 4.6.2, you could follow these steps to get the driver running.
+
 1. Copy the compiled kernel and device trees to the board. From theÿLinux_for_Tegraÿdirectory, run:
+```
 scp $TEGRA_KERNEL_OUT/arch/arm64/boot/Image <user>@<ip_address>:/tmp
 scp $TEGRA_KERNEL_OUT/arch/arm64/boot/dts/tegra210-p3448-0000-p3449-0000-b00.dtb <user>@<ip_address>:/tmp
-Where theÿ<user>ÿis the Jetson Nano username and theÿ<ip_address>ÿis the board IP address.
-2. Then, from the board, move the kernel and device tree files toÿ/boot:
+```
+Where the ```<user>``` is the Jetson Nano username and the ```<ip_address>``` is the board IP address.
+
+2. Then, from the board, move the kernel and device tree files to **/boot**:
+```
 sudo mv /tmp/Image /boot
 sudo mv /tmp/tegra210-p3448-0000-p3449-0000-b00.dtb /boot
-3. Set the board to load your device tree by modifyingÿ/boot/extlinux/extlinux.confÿfile, includingÿFDT /boot/tegra210-p3448-0000-p3449-0000-b00.dtbÿunderÿLABEL primary:
+```
+
+3. Set the board to load your device tree by modifying ```/boot/extlinux/extlinux.conf``` file, including ```FDT /boot/tegra210-p3448-0000-p3449-0000-b00.dtb``` under ```LABEL primary```:
+
+```
 LABEL primary
 MENU LABEL primary kernel
 LINUX /boot/Image
 FDT /boot/tegra210-p3448-0000-p3449-0000-b00.dtb
 INITRD /boot/initrd
 APPEND ${cbootargs} quiet root=/dev/mmcblk0p1 rw rootwait rootfstype=ext4 console=ttyS0,115200n8 console=tty0 fbcon=map:0 net.ifnames=0
+```
 
-
-Driver testing
-Basic driver testing
+# Driver testing
+## Basic driver testing
 This driver supports two cameras connected to the CSI-AB ports. It is set up as follows:
-* camera0: This is the camera connected to the CSI-AB port, its device path isÿ/dev/video0.
+* camera0: This is the camera connected to the CSI-AB port, its device path isÿ/dev/video0
 * camera1: This is the camera connected to the CSI-AB port, its device path isÿ/dev/video1
+
 Verify the driver was loaded correctly:
+```
 dmesg | grep topaz2m
+```
 * The output should look something like the following:
+
+```
 teledyne@teledyne-desktop:~$ dmesg | grep topaz2m
 [    1.288275] topaz2m 7-0010: tegracam sensor driver:topaz2m_v2.0.6
 [    1.311786] topaz2m 7-0010: TOPAZ2M sensor found
 [    1.315303] topaz2m 7-0010: detected topaz2m sensor
 [    1.506193] vi 54080000.vi: subdev topaz2m 7-0010 bound
+```
 * If two cameras are connected, the output will be:
+
+```
 teledyne@teledyne-desktop:~$ dmesg | grep topaz2m
 [    1.288275] topaz2m 7-0010: tegracam sensor driver:topaz2m_v2.0.6
 [    1.311786] topaz2m 7-0010: TOPAZ2M sensor found
@@ -477,175 +494,241 @@ teledyne@teledyne-desktop:~$ dmesg | grep topaz2m
 [    1.343063] topaz2m 8-0010: detected topaz2m sensor
 [    1.506193] vi 54080000.vi: subdev topaz2m 7-0010 bound
 [    1.506928] vi 54080000.vi: subdev topaz2m 8-0010 bound
+```
 Verify the devices are created:
+```
 ls /dev/video*
+```
 * The output should be the following:
+
+```
 teledyne@teledyne-desktop:~$ ls /dev/video*
 /dev/video0
+```
 * If two cameras are connected, the output will be:
+
+```
 teledyne@teledyne-desktop:~$ ls /dev/video*
 /dev/video0
 /dev/video1
-Optional
+```
+#### Optional:
+
 These steps are useful if the board was already flashed and confirmation that the new image and dtb are correctly installed is needed.
 * Confirm the kernel installation:
+
+```
 uname -a
+```
 The output should state the date and time the image was compiled. For example:
+```
 Linux teledyne-desktop 4.9.253-tegra #1 SMP PREEMPT Tue Aug 16 14:33:58 CST 2022 aarch64 aarch64 aarch64 GNU/Linux
+```
 * Confirm the DTB installation
+
+```
 dmesg | grep dts
+```
 The output should state the dts file name corresponding with the compiled DTB. For example:
+```
 teledyne@teledyne-desktop:~$ dmesg | grep dts
 [    0.211619] DTS File Name: /home/esalazar/JetPack-4.6.2/JetPack_4.6.2_Linux_JETSON_NANO_TARGETS/Linux_for_Tegra/sources/kernel/kernel-4.9/arch/arm64/boot/dts/../../../../../../hardware/nvidia/platform/t210/porg/kernel-dts/<dtb>
 [    0.416273] DTS File Name: /home/esalazar/JetPack-4.6.2/JetPack_4.6.2_Linux_JETSON_NANO_TARGETS/Linux_for_Tegra/sources/kernel/kernel-4.9/arch/arm64/boot/dts/../../../../../../hardware/nvidia/platform/t210/porg/kernel-dts/<dtb>
-Whereÿdtbÿcould be:
+```
+Where ```dtb``` could be:
+```
 tegra210-p3448-0000-p3449-0000-b00.dtb
 tegra210-p3448-0000-p3449-0000-a02.dts
+```
 Since this delivery supports the driver sensor for both A02 and BO1 Jetson Nano boards.
-Important:ÿIn the DTB messages will be printed the host username computer where the DTB was compiled. If you compile the DTB and flash the Jetson Nano board, your username should be printed.
+
+**Important:** In the DTB messages will be printed the host username computer where the DTB was compiled. If you compile the DTB and flash the Jetson Nano board, your username should be printed.
+
 * Also, the DTB buildtime can confirm as follows:
+
+```
 cat /proc/device-tree/nvidia,dtbbuildtime
+```
 The output should state the date and time the DTB was compiled. For example:
+```
 teledyne@teledyne-desktop:~$ cat /proc/device-tree/nvidia,dtbbuildtime
 Oct  3 202211:11:07
-Capture with v4l2-ctl
-In the following instructions, examples will be provided usingÿ/dev/video0. You can run these instructions for the second sensor by replacingÿ/dev/video0ÿforÿ/dev/video1ÿin all the commands.
+```
+
+## Capture with v4l2-ctl
+In the following instructions, examples will be provided using ```/dev/video0```. You can run these instructions for the second sensor by replacing ```/dev/video0``` for ```/dev/video1``` in all the commands.
+
 * Install v4l utils:
+```
 sudo apt install v4l-utils
+```
 * Test the capture framerate:
-1920x1080 at 65 fps, RAW10
+
+### 1920x1080 at 65 fps, RAW10
+```
 v4l2-ctl -d /dev/video0 --set-fmt-video=width=1920,height=1080,pixelformat='Y10 ' --set-ctrl bypass_mode=0 --set-ctrl sensor_mode=0 --stream-mmap
+```
 The output should look like the following:
+```
 teledyne@teledyne-desktop:~$ v4l2-ctl -d /dev/video0 --set-fmt-video=width=1920,height=1080,pixelformat='Y10 ' --set-ctrl bypass_mode=0 --set-ctrl sensor_mode=0 --stream-mmap
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< 65.00 fps
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< 65.00 fps
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< 65.11 fps
+```
 * Capture a single frame:
+
+```
 v4l2-ctl -d /dev/video0 --set-fmt-video=width=1920,height=1080,pixelformat='Y10 ' --set-ctrl bypass_mode=0 --set-ctrl sensor_mode=0 --stream-mmap --stream-count=1 --stream-to=test_frame_65fps.raw
-This captured frame can be viewed withÿrawpixelsÿorÿvooya. Please consider the following settings to be able to view it correctly:
-* rawpixels:
--ÿwidth:ÿ1920
--ÿheight:ÿ1080
--ÿPredefined format:ÿGrayscale 8bit
--ÿPixel format:ÿGrayscale
--ÿbpp1:ÿ16
-- Little Endian box checked
-Note:ÿTo capture in the Jetson Nano Board the Y10 is needed for capturing in Grayscale format. This format comes in 2 bytes with a padding of zeros for the remaining bits. Since rawpixels requires the bit depth specification for Y10 to be 16bpps, the image looks darker. To see the image as found attached, unchecked the Little Endian box option.
-* vooya:
--ÿwidth:ÿ1920
--ÿheight:ÿ1080
--ÿFrames/Second:ÿ65
--ÿColor Space:ÿSingle Channel
--ÿData Container:ÿSingle Integer
--ÿBit Depth (Value):ÿ14bit
-Note1:ÿBit depth needs to be 14 due to how the Jetson boards pack pixels. The image looks darker.
-Note2: To see the frame as has been shown before, the bit depth needs to be 10.
-1920x800 at 80 fps, RAW10
+```
+
+### 1920x800 at 80 fps, RAW10
+```
 v4l2-ctl -d /dev/video0 --set-fmt-video=width=1920,height=800,pixelformat='Y10 ' --set-ctrl bypass_mode=0 --set-ctrl sensor_mode=1 --stream-mmap
+```
+The output should look like the following:
+
+```
 teledyne@teledyne-desktop:~$ v4l2-ctl -d /dev/video0 --set-fmt-video=width=1920,height=800,pixelformat='Y10 ' --set-ctrl bypass_mode=0 --set-ctrl sensor_mode=1 --stream-mmap
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< 80.19 fps
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< 80.09 fps
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< 80.06 fps
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< 80.04 fps
+```
+
 * Capture a single frame:
+
+```
 v4l2-ctl -d /dev/video0 --set-fmt-video=width=1920,height=800,pixelformat='Y10 ' --set-ctrl bypass_mode=0 --set-ctrl sensor_mode=1 --stream-mmap --stream-count=1 --stream-to=test_frame_80fps.raw
-This captured frame can be viewed with rawpixels or vooya. Please consider the following settings to be able to view it correctly taking into account the setting mentioned in the previous mode:
-* rawpixels:ÿOnly change the height variable and Frame/Second
--ÿheight:ÿ800
-* vooya:ÿOnly change the height variable and Frame/Second
--ÿheight:ÿ800
--ÿFrames/Second:ÿ80
--ÿBit Depth (Value):ÿ14bit or 10bit
-1920x1080 at 100 fps, RAW8
+
+```
+
+### 1920x1080 at 100 fps, RAW8
+```
 v4l2-ctl -d /dev/video0 --set-fmt-video=width=1920,height=1080,pixelformat='GREY' --set-ctrl bypass_mode=0 --set-ctrl sensor_mode=2 --stream-mmap
+```
 The output should look like the following:
+```
 teledyne@teledyne-desktop:~$ v4l2-ctl -d /dev/video0 --set-fmt-video=width=1920,height=1080,pixelformat=GREY --set-ctrl bypass_mode=0 --set-ctrl sensor_mode=2 --stream-mmap
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< 101.00 fps
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< 100.50 fps
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< 100.33 fps
+```
 * Capture a single frame:
+```
 v4l2-ctl -d /dev/video0 --set-fmt-video=width=1920,height=1080,pixelformat=GREY --set-ctrl bypass_mode=0 --set-ctrl sensor_mode=2 --stream-mmap --stream-count=1 --stream-to=test_frame_100fps.raw
-This captured frame can be viewed with rawpixels or vooya. Please consider the following settings to be able to view it correctly:
-* rawpixels:
--ÿwidth:ÿ1920
--ÿheight:ÿ1080
--ÿPredefined format:ÿGrayscale 8bit
--ÿPixel format:ÿGrayscale
--ÿbpp1:ÿ8
-- Little Endian box checked
-* vooya:
--ÿwidth:ÿ1920
--ÿheight:ÿ1080
--ÿFrames/Second:ÿ100
--ÿColor Space:ÿSingle Channel
--ÿData Container:ÿSingle Integer
--ÿBit Depth (Value):ÿ8bit
+```
 
-
-1920x800 at 130 fps, RAW8
+### 1920x800 at 130 fps, RAW8
+```
 v4l2-ctl -d /dev/video0 --set-fmt-video=width=1920,height=800,pixelformat='GREY' --set-ctrl bypass_mode=0 --set-ctrl sensor_mode=3 --stream-mmap
+```
+The output should look like the following:
+```
 teledyne@teledyne-desktop:~$ v4l2-ctl -d /dev/video0 --set-fmt-video=width=1920,height=800,pixelformat='GREY' --set-ctrl bypass_mode=0 --set-ctrl sensor_mode=3 --stream-mmap
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< 130.00 fps
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< 130.00 fps
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< 130.00 fps
+```
+
 * Capture a single frame:
+```
 v4l2-ctl -d /dev/video0 --set-fmt-video=width=1920,height=800,pixelformat='GREY' --set-ctrl bypass_mode=0 --set-ctrl sensor_mode=3 --stream-mmap --stream-count=1 --stream-to=test_frame_130fps.raw
-This captured frame can be viewed with rawpixels or vooya. Please consider the following settings to be able to view it correctly taking into account the setting mentioned in the previous mode:
-* rawpixels:ÿOnly change the height variable and Frame/Second
--ÿheight:ÿ800
-* vooya:ÿOnly change the height variable and Frame/Second
--ÿheight:ÿ800
--ÿFrames/Second:ÿ130
+```
 
+## Capture with GStreamer
+**Important:** Y10 is not supported by v4l2src. For that reason, the following pipeline is for testing the RAW8 configuration.
 
-Capture with GStreamer
-Important:ÿY10 is not supported by v4l2src. For that reason, the following pipeline is for testing the RAW8 configuration.
-Important:ÿTo achieve the maximum performance at 130 fps on the Jetson Nano Devkit board, you need to run the following command on the terminal everytime the board is power on:
+**Important:** To achieve the maximum performance at 130 fps on the Jetson Nano Devkit board, you need to run the following command on the terminal everytime the board is power on:
+```
 sudo jetson_clocks
-1920x1080 at 100 fps, RAW8
+```
+
+### 1920x1080 at 100 fps, RAW8
 1. Before executing the pipeline, it is necessary to set the 1920x1080 at 100fps, RAW8 mode.
+
+```
 v4l2-ctl -d /dev/video0 --set-fmt-video=width=1920,height=1080,pixelformat='GREY' --set-ctrl sensor_mode=2
+```
 2. GStreamer pipeline using software elements:
+
+```
 gst-launch-1.0 v4l2src ! "video/x-raw,width=1920,height=1080,format=GRAY8" ! queue ! videoconvert ! queue ! xvimagesink sync=false
+```
 3. GStreamer pipeline using accelerated elements:
+
+```
 gst-launch-1.0 v4l2src ! "video/x-raw,width=1920,height=1080,format=GRAY8" ! nvvidconv ! 'video/x-raw(memory:NVMM),format=I420' ! nvoverlaysink sync=0
+```
+
 When a second camera is connected to the carrier board, the video stream can be started in parallel, from a second terminal:
+```
 v4l2-ctl -d /dev/video1 --set-fmt-video=width=1920,height=1080,pixelformat='GREY' --set-ctrl sensor_mode=2
+```
+```
 gst-launch-1.0 v4l2src device=/dev/video1 ! "video/x-raw,width=1920,height=1080,format=GRAY8" ! queue ! videoconvert ! queue ! xvimagesink sync=false
+```
 
-
-
-1920x800 at 130 fps, RAW8
+### 1920x800 at 130 fps, RAW8
 1. Before executing the pipeline, it is necessary to set the 1920x800 at 130fps, RAW8 mode.
+
+```
 v4l2-ctl -d /dev/video0 --set-fmt-video=width=1920,height=800,pixelformat='GREY' --set-ctrl sensor_mode=3
+```
+
 2. GStreamer pipeline using software elements:
+
+```
 gst-launch-1.0 v4l2src ! "video/x-raw,width=1920,height=800,format=GRAY8" ! queue ! videoconvert ! queue ! xvimagesink sync=false
+```
 3. GStreamer pipeline using accelerated elements:
+
+```
 gst-launch-1.0 v4l2src ! "video/x-raw,width=1920,height=800,format=GRAY8" ! nvvidconv ! 'video/x-raw(memory:NVMM),format=I420' ! nvoverlaysink sync=0
+```
+
 When a second camera is connected to the carrier board, the video stream can be started in parallel, from a second terminal:
+```
 v4l2-ctl -d /dev/video1 --set-fmt-video=width=1920,height=800,pixelformat='GREY' --set-ctrl sensor_mode=3
+```
+```
 gst-launch-1.0 v4l2src device=/dev/video1 ! "video/x-raw,width=1920,height=800,format=GRAY8" ! queue ! videoconvert ! queue ! xvimagesink sync=false
+```
 
-
-
-Verify framerate
+## Verify framerate
 * First, in the board, download the necessary gstreamer dependencies:
+
+```
 sudo apt update
 sudo apt install libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
+```
+
 * Clone the perf GStreamer element on the Jetson Nano Devkit board:
+
+```
 cd
 git clone https://github.com/RidgeRun/gst-perf
 cd gst-perf
+```
+
 * Compile and install the gst-perf element:
+
+```
 ./autogen.sh
 ./configure --prefix /usr/ --libdir /usr/lib/aarch64-linux-gnu/
 make
 sudo make install
+```
+
 * Test the framerate for 100fps configuration with the help of the gst-perf element:
+
 Before executing the pipeline, it is necessary to set the 1920x1080 at 100fps, RAW8 mode.
+```
 v4l2-ctl -d /dev/video0 --set-fmt-video=width=1920,height=1080,pixelformat='GREY' --set-ctrl sensor_mode=2
 gst-launch-1.0 v4l2src ! perf ! "video/x-raw,width=1920,height=1080,format=GRAY8" ! fakesink
+```
 * The output should look like the following:
+
+```
 perf: perf0; timestamp: 1:04:35.561164373; bps: 1658880000,000; mean_bps: 1658880000,000; fps: 99,995; mean_fps: 99,957
 INFO:
 perf: perf0; timestamp: 1:04:36.570362417; bps: 1658880000,000; mean_bps: 1658880000,000; fps: 100,079; mean_fps: 99,998
@@ -653,11 +736,18 @@ INFO:
 perf: perf0; timestamp: 1:04:37.579954997; bps: 1675468800,000; mean_bps: 1664409600,000; fps: 100,040; mean_fps: 100,008
 INFO:
 perf: perf0; timestamp: 1:04:38.589553097; bps: 1658880000,000; mean_bps: 1663027200,000; fps: 100,040; mean_fps: 100,015
+```
+
 * Test the framerate for 130fps configuration with the help of the gst-perf element:
+
 Before executing the pipeline, it is necessary to set the 1920x800 at 130fps, RAW8 mode.
+```
 v4l2-ctl -d /dev/video0 --set-fmt-video=width=1920,height=800,pixelformat='GREY' --set-ctrl sensor_mode=3
 gst-launch-1.0 v4l2src ! perf ! "video/x-raw,width=1920,height=800,format=GRAY8" ! fakesink
+```
 * The output should look like the following:
+
+```
 perf: perf0; timestamp: 1:07:03.794964686; bps: 1400832000,000; mean_bps: 0,000; fps: 130,012; mean_fps: 130,012
 INFO:
 perf: perf0; timestamp: 1:07:04.794993270; bps: 1597440000,000; mean_bps: 1597440000,000; fps: 129,996; mean_fps: 130,004
@@ -665,48 +755,75 @@ INFO:
 perf: perf0; timestamp: 1:07:05.795015708; bps: 1597440000,000; mean_bps: 1597440000,000; fps: 129,997; mean_fps: 130,002
 INFO:
 perf: perf0; timestamp: 1:07:06.795042468; bps: 1597440000,000; mean_bps: 1597440000,000; fps: 129,997; mean_fps: 130,001
+```
 
+## Controls testing and commands
+In the following instructions, examples will be provided usingÿ/dev/video0. You can run these instructions for the second sensor by replacing ```/dev/video0``` for ```/dev/video1``` in all the commands.
 
-Controls testing and commands
-In the following instructions, examples will be provided usingÿ/dev/video0. You can run these instructions for the second sensor by replacingÿ/dev/video0ÿforÿ/dev/video1ÿin all the commands.
 1. The camera must be capturing to use the controls. Since the patch for RAW10 support on GStreamer is not applied, it is better to test the controls with the RAW8 GStreamer pipeline resolutions.
+
+
 * 1920x1080 at 100 fps, RAW8
+
+```
 v4l2-ctl -d /dev/video0 --set-fmt-video=width=1920,height=1080,pixelformat='GREY' --set-ctrl sensor_mode=2
 gst-launch-1.0 v4l2src ! "video/x-raw,width=1920,height=1080,format=GRAY8" ! queue ! videoconvert ! queue ! xvimagesink sync=false
+```
+
 * 1920x800 at 130 fps, RAW8
+
+```
 v4l2-ctl -d /dev/video0 --set-fmt-video=width=1920,height=800,pixelformat='GREY' --set-ctrl sensor_mode=3
 gst-launch-1.0 v4l2src ! "video/x-raw,width=1920,height=800,format=GRAY8" ! queue ! videoconvert ! queue ! xvimagesink sync=false
+```
+
 2. Open up a different terminal, while GStreamer keeps displaying the captured data.
-3. Start modifying the driver control values using V4L2-CTL and you should see changes on the displayed image:
-Analog gain
+
+4. Start modifying the driver control values using V4L2-CTL and you should see changes on the displayed image:
+
+### Analog gain
+```
 v4l2-ctl --device=/dev/video0 -c analog_gain=<value>
-The Analog gain goes fromÿx1ÿtoÿx16ÿwith 16 possible values. That is why the user can only be able to replace theÿ<value>ÿparameter with an integer number between the range mentioned.
+```
 
-
-Digital gain
+### Digital gain
+```
 v4l2-ctl --device=/dev/video0 -c digital_gain=<value>
+```
 The Digital is calculated by the sensor using the following equation:
-Digital_gain = Register_value_in_12_bits / 256
-Where:
-* Register_value_in_12_bits is theÿ<value>ÿenter by the user
-That is why the user can only be able to replace theÿ<value>ÿparameter with an integer number from 0 to 4096 (212). Since internally, the digital gain goes from x0.004 to x16.
-Exposure
+```Digital_gain = Register_value_in_12_bits / 256```
+Where: ```Register_value_in_12_bits``` is the ```<value>``` enter by the user
+That is why the user can only be able to replace the ```<value>``` parameter with an integer number from 0 to 4096 (212). Since internally, the digital gain goes from x0.004 to x16.
+  
+### Exposure
+```
 v4l2-ctl --device=/dev/video0 -c exposure=<value>
-The exposure time is in ?s due to a conversion factor that the Jetson camera subsystem uses. So, the exposure values to be computed must be represented in 106.
-For example, if aÿ<value>ÿofÿ32.8 msÿwould like to be computed, this value has to be entered by the user asÿ32800 ?s.
-Frame rate
+```
+The exposure time is in us due to a conversion factor that the Jetson camera subsystem uses. So, the exposure values to be computed must be represented in 106.
+For example, if a ```<value>``` of ```32.8 ms``` would like to be computed, this value has to be entered by the user as ```32800 us```.
+
+### Frame rate
+```
 v4l2-ctl --device=/dev/video0 -c frame_rate=<value>
-The frame rate values to be computed must be represented in 106ÿdue to a conversion factor that the Jetson camera subsystem uses.
-For example, if aÿ<value>ÿofÿ60 fpsÿwould like to be computed, this value has to be entered by the user asÿ60000000.
-Test pattern
+```
+The frame rate values to be computed must be represented in 106 due to a conversion factor that the Jetson camera subsystem uses.
+For example, if a ```<value>``` of ```60 fps``` would like to be computed, this value has to be entered by the user as ```60000000```.
+
+### Test pattern
+```
 v4l2-ctl --device=/dev/video0 -c test_pattern=<value>
-Flip
+```
+
+### Flip
+```
 v4l2-ctl --device=/dev/video0 -c flip=<value>
+```
 
 
-Testing scripts
+## Testing scripts
 The following scripts will help you test the different driver controls.
-Analog gain testing script
+### Analog gain testing script
+```
 ./analog_gain_test.sh
 #!/bin/bash
 
@@ -730,9 +847,10 @@ pkill -9 gst-launch-1.0
 echo "-------------------------------------"
 echo ""
 echo ""
+```
 
-
-Digital gain testing script
+### Digital gain testing script
+```
 ./digital_gain_test.sh
 #!/bin/bash
 
@@ -756,9 +874,10 @@ pkill -9 gst-launch-1.0
 echo "-------------------------------------"
 echo ""
 echo ""
+```
 
-
-Exposure testing script
+### Exposure testing script
+```
 ./exposure_test.sh
 #!/bin/bash
 
@@ -781,9 +900,10 @@ done
 pkill -9 gst-launch-1.0
 echo "-------------------------------------"
 echo ""
+```
 
-
-Frame rate testing script
+### Frame rate testing script
+```
 ./frame_rate_test.sh
 #!/bin/bash
 
@@ -806,9 +926,10 @@ done
 pkill -9 gst-launch-1.0
 echo "-------------------------------------"
 echo ""
+```
 
-
-Test pattern testing script
+### Test pattern testing script
+```
 ./test_pattern_test.sh
 #!/bin/bash
 
@@ -831,9 +952,10 @@ done
 pkill -9 gst-launch-1.0
 echo "-------------------------------------"
 echo ""
+```
 
-
-Flip testing script
+### Flip testing script
+```
 ./flip_test.sh
 #!/bin/bash
 
@@ -856,70 +978,98 @@ done
 pkill -9 gst-launch-1.0
 echo "-------------------------------------"
 echo ""
+```
 
 
-
-Reading I2C bus address registers
+## Reading I2C bus address registers
 For reading, and also writing, I2C bus address registers the sensor has to be capturing video usingÿv4l2-ctlÿor GStreamer. Since the addresses to be read are 8 bits and need to give back a value of 16 bits, theÿi2ctransferÿcommand can be used to read these addresses as follows in this specific case:
+```
 i2ctransfer -f -y [BUS NUMBER] w[BYTES]@[ADDRESS] [REGISTER] r[BYTES]
+```
 For example, to read the registerÿ0x7Fÿ(chip ID) of theÿ0x10ÿaddress in i2c 6 bus, it is needed to write 1 byte (0x7F) to theÿ0x10ÿaddress and read 2 bytes (r[BYTES]) from this register. So, the full command is:
+```
 i2ctransfer -f -y 6 w1@0x10 0x7F r2
+```
 The register gives back:
+```
 i2ctransfer -f -y 6 w1@0x10 0x7F r2
 0x80 0x36
+```
 Alternatively, other components available on the module are always available and can be checked even if the video stream is off. For example, the EEMPROM memory can be read:
-
+```
 i2ctransfer -f -y 6 w2@0x50 0x06 0x90 r2
+
 0x00 0x00 #if no-lens module connected
 0x10 0x00 #if fixed-focus module connected
 0x20 0x00 #if multi-focus module connected
+```
 
 When two modules are connected at the same time (B01 board only), the following bus ID has to be used:
 * CAM0: bus 7
 * CAM1: bus 8
 
 Exemple for CAM0:
+```
 i2ctransfer -f -y 7 w2@0x50 0x06 0x90 r2
+```
 Exemple for CAM1:
+```
 i2ctransfer -f -y 8 w2@0x50 0x06 0x90 r2
+```
 
 Note that the bus 6 is used by the driver to communicate with the selected camera by controlling an I2C bus multiplexor. So, it can be connected to CAM0 or CAM1 depending on the last V4L2 command.
 
 
-
-
-Writing I2C bus address
+## Writing I2C bus address
 For reading, and also writing, I2C bus address registers the sensor has to be capturing video usingÿv4l2-ctlÿor GStreamer. For writing to an I2C bus address registers the sensor has to be capturing video usingÿv4l2-ctlÿor GStreamer. The syntaxis is similar to reading the bus registers:
+```
 i2ctransfer -f -y [BUS NUMBER] w[BYTES]@[ADDRESS] [REGISTER] [MSB VALUE TO WRITE] [MSB VALUE TO READ]
+```
 For example, to write to the registerÿ0x0Bÿ(Integration Time) of theÿ0x10ÿaddress in i2c 6 bus, it is needed to write 3 bytes (w[BYTES]) to the registerÿ0x0Bÿof theÿ0x10ÿaddress. 1 byte is for the register to be written (0x0B) and the other 2 bytes are the value to be written in this register. So, the full command for this example is:
+
 For example:
+```
 i2ctransfer -f -y 6 w3@0x10 0x0b 0x30 0x00
+```
 If the registerÿ0x0Bÿis read:
+```
 teledyne@ubuntu:~$ i2ctransfer -f -y 6 w1@0x10 0x0b r2
 0x30 0x00
+```
 When two modules are connected at the same time (B01 board only), the following bus ID has to be used:
 * CAM0: bus 7
 * CAM1: bus 8
 
 Exemple for CAM0:
+```
 i2ctransfer -f -y 7 w3@0x10 0x0b 0x30 0x00
+```
 Exemple for CAM1:
+```
 i2ctransfer -f -y 8 w3@0x10 0x0b 0x30 0x00
+```
 
 Note that the bus 6 is used by the driver to communicate with the selected camera by controlling an I2C bus multiplexor. So, it can be connected to CAM0 or CAM1 depending on the last V4L2 command.
 
 
 
-Driver debugging
-Debug V4L2 Capture
-Enable drivers debug
+# Driver debugging
+## Debug V4L2 Capture
+### Enable drivers debug
 To enable drivers debugging, use the following command replacing <FILE> with the name of the file.
+  ```
 echo file <FILE> +p > /sys/kernel/debug/dynamic_debug/control    # '+p' to enable debug
+  ```
 To disable debug:
+  ```
 echo file <FILE> -p > /sys/kernel/debug/dynamic_debug/control    # '-p' to disable debug
+  ```
 1. Enter into the Super User mode:
+  ```
 sudo su
+  ```
 2. Run the following commands:
+  ```
 echo 7 >/sys/class/video4linux/video0/dev_debug
 echo 8 > /proc/sys/kernel/printk
 cd /sys/kernel/debug/dynamic_debug/
@@ -947,7 +1097,9 @@ echo 1 > /sys/kernel/debug/tracing/events/freertos/enable
 echo 1 > /sys/kernel/debug/tracing/events/camera_common/enable
 echo > /sys/kernel/debug/tracing/trace
 exit
-Note:ÿthe debug messages will be visible either throughÿdmesgÿor using UART. In the following section, you will find instructions on how to find the messages using theÿdmesgÿprocedure.
+  ```
+  
+**Note:** the debug messages will be visible either throughÿdmesgÿor using UART. In the following section, you will find instructions on how to find the messages using theÿdmesgÿprocedure.
 
 
 Testing the RAW10 resolution
