@@ -87,9 +87,6 @@ o 1920x1080 at 130fps, RAW8
 2022/08/17
 * Base driver.
 
-
-
-
 # Driver controls
 Gain
 Control
@@ -182,175 +179,264 @@ Horizontal flip
 3
 Vertical and horizontal flip
 
-
-
 # Update current build
 Important: This step is only needed if a previous environment has been set up. If not, please continue with the Build from scratch section.
 Move to the Linux for tegra directory
 
-```cd ~/JetPack-4.6.2/JetPack_4.6.2_Linux_JETSON_NANO_TARGETS/Linux_for_Tegra/sources/```
+```
+cd ~/JetPack-4.6.2/JetPack_4.6.2_Linux_JETSON_NANO_TARGETS/Linux_for_Tegra/sources/
+```
 
 ## Apply the new driver patch
 1. Undo the last driver patch:
 Important: This step is only needed if a previous environment has an added driver. If not, please continue with step 2
+
+```
 quilt pop -a
-
+```
+```
 rm -rf patches/
-
+```
 2. Please extract the contents provided inÿ4.6.2_evm_topaz2m_vX.Y.Z.tarÿ (with X.Y.Z the driver version).inÿsourcesÿdirectory: 
+```
 tar -xf 4.6.2_evm_topaz2m_vX.Y.Z.tar
+```
 Now, to verify the existence of all the patch files, please run the following commands on a command line:
+```
 echo -n "Patches directory check: ";if test -e "patches"; then echo "PASS"; else echo "FAIL"; fi;
 echo -n "Series file check: ";if test -f "patches/series"; then echo "PASS"; else echo "FAIL"; fi;
 while read p; do echo -n "$p file check: "; if test -f "patches/$p"; then echo "PASS"; else echo "FAIL";fi; done < patches/series
+```
 You can then apply the patch:
+```
 quilt push -a
+```
 After applying the patch, return to the Linux_for_Tegra directory.
+```
 cd ..
+```
 
 # Build from scratch
-Download JetPack
+## Download JetPack
 IMPORTANT: Starting with a fresh JetPack installation is needed
 This step has to be done on a host PC running with Ubuntu 18.04
 1. Download and install the SDK manager: NVIDIA SDK Manager | NVIDIA Developer
 2. Create the needed directory for the desired JetPack version:
+
+```
 mkdir -p ~/JetPack-4.6.2/downloads
+```
 3. Open SDKManager. Select the right hardware and JetPack version:
 
 4. Create directories for installation:
 
-* Download folder:ÿ~/JetPack-4.6.2/downloads
-* Target HW image folder:ÿ~/JetPack-4.6.2
-4.ÿSkip the flashing and installing and click on finish.
+* Download folder: ```~/JetPack-4.6.2/downloads```
+* Target HW image folder: ```~/JetPack-4.6.2```
+
+5. Skip the flashing and installing and click on finish.
 
 
-Get the sources
-1.ÿMove to the Linux_for_Tegra directory:
+## Get the sources
+1.Move to the Linux_for_Tegra directory:
+```
 cd ~/JetPack-4.6.2/JetPack_4.6.2_Linux_JETSON_NANO_TARGETS/Linux_for_Tegra/
-2.ÿThere you will find the source_sync.sh script. Please run the following command to get Jetpack 4.6 sources:
+```
+2.There you will find the source_sync.sh script. Please run the following command to get Jetpack 4.6 sources:
+```
 ./source_sync.sh -t tegra-l4t-r32.7.1
-Apply the driver patch
+```
+## Apply the driver patch
 1. Move to the Linux for tegra directory
+```
 cd ~/JetPack-4.6.2/JetPack_4.6.2_Linux_JETSON_NANO_TARGETS/Linux_for_Tegra/sources/
+```
 2. Please extract the contents provided inÿ4.6.2_evm_topaz2m_vX.Y.Z.tarÿ (with X.Y.Z the driver version).inÿsourcesÿdirectory:
+```
 tar -xf 4.6.2_evm_topaz2m_vX.Y.Z.tar
+```
 Now, to verify the existence of all the patch files, please run the following commands on a command line:
+```
 echo -n "Patches directory check: ";if test -e "patches"; then echo "PASS"; else echo "FAIL"; fi;
 echo -n "Series file check: ";if test -f "patches/series"; then echo "PASS"; else echo "FAIL"; fi;
 while read p; do echo -n "$p file check: "; if test -f "patches/$p"; then echo "PASS"; else echo "FAIL";fi; done < patches/series
+```
 You can then apply the patch:
+```
 quilt push -a
+```
 After applying the patch, return to the Linux_for_Tegra directory.
+```
 cd ..
+```
 
+# Compile the driver
 
-
-Compile the driver
-Setup the toolchain
-1.ÿCreate the necessary directories for the toolchain:
+## Setup the toolchain
+1. Create the necessary directories for the toolchain:
+```
 mkdir -p ~/JetPack-4.6.2/toolchain
 cd ~/JetPack-4.6.2/toolchain/
-2.ÿGet the toolchain tarball:
+```
+2. Get the toolchain tarball:
+```
 wget http://releases.linaro.org/components/toolchain/binaries/7.3-2018.05/aarch64-linux-gnu/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu.tar.xz
-3.ÿExtract the contents and remove the toolchain tarball:
+```
+3. Extract the contents and remove the toolchain tarball:
+```
 tar xvf gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu.tar.xz
 rm  gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu.tar.xz
-Compiling setup
-1.ÿDefine environment variables:
+```
+
+## Compiling setup
+1. Define environment variables:
+```
 # Variable to the Linux for Tegra directory
 export DEVDIR=~/JetPack-4.6.2/JetPack_4.6.2_Linux_JETSON_NANO_TARGETS/Linux_for_Tegra/
-2.ÿCreate the necessary directories:
+```
+2.Create the necessary directories:
+```
 cd $DEVDIR
 # Create the directory to store the compiled image and dtb
 mkdir -p $DEVDIR/images/dtb
-3.ÿDefine the environment variables:
+```
+3.Define the environment variables:
+```
 export TEGRA_KERNEL_OUT=$DEVDIR/images
 export ARCH=arm64
 export KERNEL_DIR=$DEVDIR/sources/kernel/kernel-4.9
 export CROSS_COMPILE=~/JetPack-4.6.2/toolchain/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-
 export LOCALVERSION=-tegra
-4.ÿClean the environment:
+```
+4. Clean the environment:
+```
 cd $KERNEL_DIR
 make mrproper
-Compile
-1.ÿConfigure the kernel:
+```
+## Compile
+1. Configure the kernel:
+```
 cd $KERNEL_DIR
 make O=$TEGRA_KERNEL_OUT tegra_defconfig
 make O=$TEGRA_KERNEL_OUT menuconfig
+```
 In the terminal menu that appears, select:
-Note:ÿBy default, the driver is selected with an asterisk. For that reason, if you go back by hitting the doubleÿEscÿkey the message:ÿDo you want to save your new configuration?ÿwill not appear.
+
+**Note:** By default, the driver is selected with an asterisk. For that reason, if you go back by hitting the doubleÿEscÿkey the message:ÿDo you want to save your new configuration?ÿwill not appear.
+```
 Device Drivers  --->
   <*> Multimedia support  --->
       NVIDIA overlay Encoders, decoders, sensors and other helper chips  --->
           <*> TOPAZ2M camera sensor support
-If the driver is not selected, press theÿYÿkey in order to select the TOPAZ2M option. Go back by hitting the doubleÿEscÿkey until you get the message:ÿDo you want to save your new configuration?, selectÿYesÿand pressÿEnter'
-Note: if the ?menuconfig? command doesn?t work, please run the following command:
+```
+If the driver is not selected, press the ```Y``` key in order to select the TOPAZ2M option. Go back by hitting the doubl ```Esc``` key until you get the message: ```Do you want to save your new configuration?```, select ```Yes```and press```Enter```
+
+**Note:** if the "menuconfig" command doesn't work, please run the following command:
+```
 sudo apt-get install libncurses5-dev libncursesw5-dev
-2.ÿCompile the kernel:
+```
+2. Compile the kernel:
+```
 make O=$TEGRA_KERNEL_OUT CROSS_COMPILE=${CROSS_COMPILE} -j4 zImage
-3.ÿCompile the device tree:
+```
+3.Compile the device tree:
+```
 make O=$TEGRA_KERNEL_OUT CROSS_COMPILE=${CROSS_COMPILE} -j4 dtbs
+```
 
-
-Install the driver
-Putting the board in Force Recovery Mode (FCM)
+# Install the driver
+## Putting the board in Force Recovery Mode (FCM)
 To set the device to Force Recovery Mode, the FC REC and GND pins must be connected before powering up the board.
 For the Jetson Nano Development Kit B01 model, the connection is done like this:
 
 
-Next, plug the Jetson Nano board into the computer using a microUSB cable. The Force Recovery Mode can be verified by running theÿlsusbÿcommand in a terminal on the computer. The terminal should print a line similar to the following:
+Next, plug the Jetson Nano board into the computer using a microUSB cable. The Force Recovery Mode can be verified by running the ```lsusb``` command in a terminal on the computer. The terminal should print a line similar to the following:
+```
 Bus 001 Device 015: ID 0955:7f21 NVidia Corp.
+```
 
-
-Prepare to flash
+## Prepare to flash
 In order to install the driver, the jetson nano devkit board needs to be flashed. To accomplish this, all the compiled files need to be moved to the right directories.
-1.ÿCopy the compiled image to the kernel directory.
+1.Copy the compiled image to the kernel directory.
+```
 cp $TEGRA_KERNEL_OUT/arch/arm64/boot/Image $TEGRA_KERNEL_OUT/arch/arm64/boot/zImage $DEVDIR/kernel/
-2.ÿCopy the compiled device tree to the kernel directory.
+```
+2.Copy the compiled device tree to the kernel directory.
+```
 cp -r $TEGRA_KERNEL_OUT/arch/arm64/boot/dts/* $DEVDIR/kernel/dtb/
-
+```
 Then 3 different methods are proposed to flash the board:
 * Normal flash
 * Massflash
 * Only copy the kernel and device tree
 
-Normal flash
-1.ÿConnect the carrier board to the computer through a microUSB cable and set the jetson nano devkit board toÿForce Recoveryÿmode.
-2.ÿFlash the board:
+## Normal flash
+1. Connect the carrier board to the computer through a microUSB cable and set the jetson nano devkit board to **Force Recover** mode.
+2. Flash the board:
+```
 cd $DEVDIR
 sudo ./flash.sh jetson-nano-qspi-sd mmcblk0p1
-3.ÿReboot the board after the flashing is completed.
+```
+3. Reboot the board after the flashing is completed.
 
+**Note:** If this procedure to flash failed, it is recommended to try with **Massflash** procedure.
 
-Massflash
+## Massflash
 Massflash is NVIDIA's tool for flashing multiple Jetson boards simultaneously when on production. It provides a way to generate images in trusted environments. The massflash blobs are portable, encrypted, and provide signed binary firmware and tool files. It is the recommended method for flashing devices when ready for production.
-In case a massflash blob has been provided by your support team, go directly to the step 2.
+
+In case a massflash blob has been provided by your support team, go directly to the **step 2**.
+
 1. To generate the massflash blob, please run the following command from the Linux_for_Tegra directory:
+```
 cd ~/JetPack-4.6.2/JetPack_4.6.2_Linux_JETSON_NANO_TARGETS/Linux_for_Tegra/
 sudo BOARDID=3448 BOARDSKU=0000 FAB=400 FUSELEVEL=fuselevel_production ./nvmassflashgen.sh  jetson-nano-devkit mmcblk0p1
+```
 It is recommended to create a separate directory to perform the massflash process because the massflash is a self-contained environment.
+
 2. Create the directory for the massflash files:
+```
 mkdir -p ~/teledyne_topaz2m_massflash
 cd teledyne_topaz2m_massflash
-3. Copy the massflash blob file mfi_jetson-nano-devkit.tbz2 in this directory and extract it:
+```
+
+3. Copy the massflash blob file ```mfi_jetson-nano-devkit.tbz2``` in this directory
+```
+cp ~/JetPack-4.6.2/JetPack_4.6.2_Linux_JETSON_NANO_TARGETS/Linux_for_Tegra/mfi_jetson-nano-devkit.tbz2 .
+```
+or from a different directory if needed
+
+5.   Extract the massflash file:
+```
 tar -xvjf mfi_jetson-nano-devkit.tbz2
-4. Enter the extracted directory:
+```
+
+6. Enter the extracted directory:
+```
 cd mfi_jetson-nano-devkit
-5. Make sure the board is in recovery mode and plugged to your computer.
-6. Start flashing the Jetson board:
+```
+
+7. Make sure the board is in **recovery mode** and plugged to your computer.
+
+9. Start flashing the Jetson board:
+```
 sudo ./nvmflash.sh --showlogs
-7. Another terminal will be opened on your computer. When the flash finished, a message like the following will be shown:
+```
+
+9. Another terminal will be opened on your computer. When the flash finished, a message like the following will be shown:
+```
 *** Writing the BCT succeeded.
 *** Rebooting the device
 /home/teledyne/teledyne_topaz2m_massflash/mfi_jetson-nano-devkit/tegradevflash --instance 1-1 --reboot coldboot
 Cboot version 00.01.0000
 *** Rebooting the device succeeded.
-
+```
 
 Also, in the original terminal, a message like the following will be shown:
+```
 Start flashing device: 1-1, PID: 1716
 Flash complete (SUCCESS)
-Only copy the kernel and device tree
+```
+
+## Only copy the kernel and device tree
 Note: This method might cause problems for the board to load the custom device tree. If you happen to have an already flashed and configured Jetson Nano with Jetpack 4.6.2, you could follow these steps to get the driver running.
 1. Copy the compiled kernel and device trees to the board. From theÿLinux_for_Tegraÿdirectory, run:
 scp $TEGRA_KERNEL_OUT/arch/arm64/boot/Image <user>@<ip_address>:/tmp
