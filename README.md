@@ -1000,8 +1000,8 @@ Alternatively, other components available on the module are always available and
 i2ctransfer -f -y 6 w2@0x50 0x06 0x90 r2
 
 0x00 0x00 #if no-lens module connected
-0x10 0x00 #if fixed-focus module connected
-0x20 0x00 #if multi-focus module connected
+0x01 0x00 #if fixed-focus module connected
+0x02 0x00 #if multi-focus module connected
 ```
 
 When two modules are connected at the same time (B01 board only), the following bus ID has to be used:
