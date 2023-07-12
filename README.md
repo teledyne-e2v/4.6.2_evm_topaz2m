@@ -1,5 +1,6 @@
 # 4.6.2_evm_topaz2m
 Jetson Nano driver for OPTIMOM 2M
+Version: 0.5.0 [kernel_image and device_tree contain color sensor fix]
 
 
 
@@ -439,7 +440,9 @@ Flash complete (SUCCESS)
 ## Only copy the kernel and device tree
 **Note:** This method might cause problems for the board to load the custom device tree. If you happen to have an already flashed and configured Jetson Nano with Jetpack 4.6.2, you could follow these steps to get the driver running.
 
-1. Copy the compiled kernel and device trees to the board. From theÿLinux_for_Tegraÿdirectory, run:
+Kernal image and device tree are also availble in this repository.
+
+1. Copy the compiled kernel and device trees to the board. From the ```Linux_for_Tegra``` directory, run:
 ```
 scp $TEGRA_KERNEL_OUT/arch/arm64/boot/Image <user>@<ip_address>:/tmp
 scp $TEGRA_KERNEL_OUT/arch/arm64/boot/dts/tegra210-p3448-0000-p3449-0000-b00.dtb <user>@<ip_address>:/tmp
