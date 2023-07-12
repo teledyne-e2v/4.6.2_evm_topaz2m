@@ -1,8 +1,7 @@
 # 4.6.2_evm_topaz2m
 Jetson Nano driver for OPTIMOM 2M
+
 Version: 0.5.0 [kernel_image and device_tree contain color sensor fix]
-
-
 
 # Driver specifications
 Feature
